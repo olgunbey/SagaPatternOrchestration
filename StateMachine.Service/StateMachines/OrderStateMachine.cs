@@ -32,25 +32,11 @@ public class OrderStateMachine : MassTransitStateMachine<OrderStateInstance>
             );
 
 
-        Event(() => StockReservedEvent,
-            orderStateInstance =>
-                orderStateInstance.CorrelateById(@event =>
-                    @event.Message.CorrelationId));
-
-        Event(() => StockNotReservedEvent,
-            orderStateInstance =>
-                orderStateInstance.CorrelateById(@event =>
-                    @event.Message.CorrelationId));
-
         Event(() => PaymentCompletedEvent,
             orderStateInstance =>
                 orderStateInstance.CorrelateById(@event =>
                     @event.Message.CorrelationId));
 
-        Event(() => PaymentFailedEvent,
-            orderStateInstance =>
-                orderStateInstance.CorrelateById(@event =>
-                    @event.Message.CorrelationId));
 
         Initially(When(OrderStartedEvent)
             .Then(context =>
@@ -80,7 +66,7 @@ public class OrderStateMachine : MassTransitStateMachine<OrderStateInstance>
             When(StockNotReservedEvent)
                 .TransitionTo(StockNotReserved)
                 .Send(new Uri($"queue:{RabbitMqSettings.Order_OrderFailedEventQueue}"),
-                    context => new OrderFailedEvent()
+                    context => new OrderFailedEvent(context.Saga.CorrelationId)
                     {
                         OrderId = context.Saga.OrderId,
                         Message = context.Message.Message
@@ -101,7 +87,7 @@ public class OrderStateMachine : MassTransitStateMachine<OrderStateInstance>
             When(PaymentFailedEvent)
                 .TransitionTo(PaymentFailed)
                 .Send(new Uri($"queue:{RabbitMqSettings.Order_OrderFailedEventQueue}"),
-                    context => new OrderFailedEvent()
+                    context => new OrderFailedEvent(context.Saga.CorrelationId)
                     {
                         OrderId = context.Saga.OrderId
                     })

@@ -3,13 +3,9 @@ using Shared.Message;
 
 namespace Shared.PaymentEvents;
 
-public class PaymentFailedEvent:CorrelatedBy<Guid>
+public class PaymentFailedEvent
 {
-    public PaymentFailedEvent(Guid correlationId)
-    {
-        CorrelationId = correlationId;
-    }
-    public Guid CorrelationId { get; }
+
     public string Message { get; set; }
     public List<OrderItemMessage> OrderItemMessages { get; set; }
 }
